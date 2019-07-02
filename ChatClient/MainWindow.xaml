@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatClient"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow"  Closing="Window_Closing" Height="450" Width="800">
 	<Grid>
 		<TextBox Height="269" HorizontalAlignment="Left" Margin="10,0,0,0" Name="chatBox" VerticalAlignment="Top" Width="357" IsReadOnly="True" VerticalScrollBarVisibility="Visible" />
 		<Label Content="Userlist" Height="28" HorizontalAlignment="Left" Margin="367,10,0,0" Name="label3" VerticalAlignment="Top" Width="98" />

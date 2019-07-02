@@ -119,10 +119,11 @@ namespace ChatClient
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+		private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 			if (call != null)
 			{
+				await call.RequestStream.CompleteAsync();
 				call.Dispose();
 				call = null;
 			}
