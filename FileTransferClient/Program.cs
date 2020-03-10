@@ -62,7 +62,7 @@ namespace FileTransferClient
 					{
 						FilePayload = new FilePayload
 						{
-							Chunk = Google.Protobuf.ByteString.CopyFrom(chunk.AsSpan<byte>().Slice(0, bytesRead))
+							Chunk = Google.Protobuf.ByteString.CopyFrom(new Span<byte>(chunk, 0, bytesRead))
 						}
 					};
 
