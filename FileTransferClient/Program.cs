@@ -30,7 +30,7 @@ namespace FileTransferClient
 
 				await call.RequestStream.CompleteAsync();
 
-				await call.ResponseAsync;
+				await call;
 				
 			}
 
