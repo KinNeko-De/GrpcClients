@@ -23,7 +23,6 @@ namespace FileTransferClient
 			CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 			using (var call = grpcClient.StartUpload())
 			{
-
 				await SendFileMetadata(fileName, call);
 
 				await SendFilePayload(sourceFile, call, cancellationTokenSource.Token);
@@ -52,17 +51,18 @@ namespace FileTransferClient
 		{
 			var chunksize = 0x1F400;
 			byte[] chunk = new byte[chunksize];
+			Memory<byte> memory = new Memory<byte>(chunk);
 
-			using (FileStream fileToUpload = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, chunksize))
+			await using (FileStream fileToUpload = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, chunksize))
 			{
 				int bytesRead = 0;
-				while((bytesRead = await fileToUpload.ReadAsync(chunk, 0, chunksize, cancellationToken)) > 0)
+				while((bytesRead = await fileToUpload.ReadAsync(memory, cancellationToken)) > 0)
 				{
 					var filePayloadRequest = new StartUploadRequest()
 					{
 						FilePayload = new FilePayload
 						{
-							Chunk = Google.Protobuf.ByteString.CopyFrom(new Span<byte>(chunk, 0, bytesRead))
+							Chunk = Google.Protobuf.ByteString.CopyFrom(memory.Slice(0, bytesRead).Span)
 						}
 					};
 
