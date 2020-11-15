@@ -1,0 +1,56 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "GrpcServer";
+
+package Chat;
+
+
+service Chat {
+  rpc SendMessages (stream ChatMessagesRequest) returns (stream ChatMessagesResponse) {}
+  rpc DirectMessage (DirectMessageRequest) returns (DirectMessageResponse) {}
+}
+
+message ChatMessagesRequest {
+	oneof messages {
+		NewUserRequest new_user = 1;	
+		ChatMessageRequest chat_message = 2;
+	}
+}
+
+
+message ChatMessagesResponse {
+	oneof messages {
+		NewUserResponse new_user = 1;	
+		ChatMessageResponse chat_message = 2;
+	}
+}
+
+message ChatMessageRequest {
+	string id = 1;
+	string message  = 2;
+}
+
+message NewUserRequest {
+	string id = 1;
+	string name  = 2;
+}
+
+message NewUserResponse {
+	string id = 1;
+	string name  = 2;
+}
+
+message ChatMessageResponse {
+	string id = 1;
+	string message = 2;
+	string user_name = 3;
+}
+
+message DirectMessageRequest  {
+	string id = 1;
+	string send_to = 2;
+	string message  = 3;
+}
+
+message DirectMessageResponse {
+}
