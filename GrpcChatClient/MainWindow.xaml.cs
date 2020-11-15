@@ -40,8 +40,8 @@ namespace GrpcChatClient
 			try
 			{
 				call = await ConnectToServer();
-				await Login(call, "Max");
-				await ReceivingResponses(call);
+				await Login($"Max{new Random().Next(1, 100)}");
+				await ReceivingResponses();
 			}
 			catch (Exception exception)
 			{
@@ -57,13 +57,13 @@ namespace GrpcChatClient
 			return call;
 		}
 
-		private async Task ReceivingResponses(AsyncDuplexStreamingCall<ChatMessagesRequest, ChatMessagesResponse> call)
+		private async Task ReceivingResponses()
 		{
 			IAsyncEnumerable<ChatMessagesResponse> responses = call.ResponseStream.ReadAllAsync(cancellationTokenSource.Token);
 			await OutputResponses(responses);
 		}
 
-		public async Task Login(AsyncDuplexStreamingCall<ChatMessagesRequest, ChatMessagesResponse> call, string name)
+		public async Task Login(string name)
 		{
 			var request = new ChatMessagesRequest()
 			{
@@ -204,7 +204,17 @@ namespace GrpcChatClient
 				return;
 			}
 
-			await SendMessageOverTheWire(messageText.Text);
+			await SendMessageOverTheWire(messageText.ToString());
+
+			/*
+			var random = new Random();
+			while (true)
+			{
+				var randomMessage = random.Next(1, 1000);
+				await SendMessageOverTheWire(randomMessage.ToString());
+				await Task.Delay(2);
+			}
+			*/
 
 			messageText.Clear();
 		}
