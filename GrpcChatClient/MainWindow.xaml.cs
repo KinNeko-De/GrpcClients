@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Grpc.Core;
+using Grpc.Net.Client;
 using GrpcServer;
 
 namespace GrpcChatClient
@@ -52,9 +53,16 @@ namespace GrpcChatClient
 		public async Task<AsyncDuplexStreamingCall<ChatMessagesRequest, ChatMessagesResponse>> ConnectToServer()
 		{
 			await AppendLineToChatBox($"Trying to connect to server...");
-			var client = ProtoClient.GrpcChatClientProvider.Create();
+			var client = CreateClient();
 			call = client.SendMessages(cancellationToken: cancellationTokenSource.Token);
 			return call;
+		}
+
+		public static Chat.ChatClient CreateClient()
+		{
+			var channel = GrpcChannel.ForAddress("https://localhost:5001");
+			var client = new Chat.ChatClient(channel);
+			return client;
 		}
 
 		private async Task ReceivingResponses()
@@ -67,7 +75,7 @@ namespace GrpcChatClient
 		{
 			var request = new ChatMessagesRequest()
 			{
-				NewUser = new NewUserRequest()
+				UserLogin = new UserLogin()
 				{
 					Id = Guid.NewGuid().ToString(),
 					Name = name
@@ -83,7 +91,7 @@ namespace GrpcChatClient
 		{
 			var request = new ChatMessagesRequest()
 			{
-				ChatMessage = new ChatMessageRequest()
+				ChatMessage = new ChatMessage()
 				{
 					Id = userId.ToString(),
 					Message = message
@@ -102,10 +110,13 @@ namespace GrpcChatClient
 					case ChatMessagesResponse.MessagesOneofCase.None:
 						break;
 					case ChatMessagesResponse.MessagesOneofCase.ChatMessage:
-						await AppendLineToChatBox($"[{response.ChatMessage.UserName}]: {response.ChatMessage.Message}");
+						await AppendLineToChatBox($"[{response.SendFromUserName}]: {response.ChatMessage.Message}");
 						break;
-					case ChatMessagesResponse.MessagesOneofCase.NewUser:
-						await AppendLineToChatBox($"[{response.NewUser.Name}] connected.");
+					case ChatMessagesResponse.MessagesOneofCase.UserLogin:
+						await AppendLineToChatBox($"[{response.UserLogin.Name}] connected.");
+						break;
+					case ChatMessagesResponse.MessagesOneofCase.UserLogout:
+						await AppendLineToChatBox($"[{response.UserLogout.Name}] disconnected.");
 						break;
 				}
 			}
@@ -181,15 +192,17 @@ namespace GrpcChatClient
 		{
 			await AppendLineToChatBox($"Disconnecting...");
 
-			cancellationTokenSource.Cancel();
-
 			if (call != null)
 			{
 				await call.RequestStream.CompleteAsync();
+
+				// Dispose because i dispose everything. It should not cancel here if we did everything right
 				call.Dispose();
 				call = null;
 			}
 
+			// Just to be sure :)
+			cancellationTokenSource.Cancel();
 			cancellationTokenSource.Dispose();
 		}
 
@@ -204,7 +217,7 @@ namespace GrpcChatClient
 				return;
 			}
 
-			await SendMessageOverTheWire(messageText.ToString());
+			await SendMessageOverTheWire(messageText.Text);
 
 			/*
 			var random = new Random();
