@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,16 +20,17 @@ namespace GrpcChatClient
 		private readonly CancellationTokenSource cancellationTokenSource;
 		private Guid userId = Guid.NewGuid();
 		private AsyncDuplexStreamingCall<ChatMessagesRequest, ChatMessagesResponse> call;
+		private BlockingCollection<ChatMessagesResponse> incomingMessages = new BlockingCollection<ChatMessagesResponse>();
+		private BlockingCollection<ChatMessagesRequest> outgoingMessages = new BlockingCollection<ChatMessagesRequest>();
+
+		private Task sendingTask;
+		private Task outputTask;
+		private Task receivingTask;
 
 		public MainWindow()
 		{
 			// With help from http://www.networkcomms.net/creating-a-wpf-chat-client-server-application/
 			// They used ProtoContract and ProtoMember as attribute.. 5 years ago.. very funny :)
-
-			// Fix for current bug in wpf .net core. crashes with german localisation "BILDAUF" not found :)
-			// var culture = new System.Globalization.CultureInfo("en-US");
-			// Thread.CurrentThread.CurrentCulture = culture;
-			// Thread.CurrentThread.CurrentUICulture = culture;
 
 			cancellationTokenSource = new CancellationTokenSource();
 
@@ -41,8 +44,18 @@ namespace GrpcChatClient
 			try
 			{
 				call = await ConnectToServer();
+
+				var outgoing = outgoingMessages
+					.GetConsumingEnumerable();
+				sendingTask = Task.Run(() => SendMessageOverTheWire(outgoing));
+
+				var incoming = incomingMessages
+					.GetConsumingEnumerable();
+				outputTask = Task.Run(() => OutputMessages(incoming));
+
 				await Login($"Max{new Random().Next(1, 100)}");
-				await ReceivingResponses();
+
+				receivingTask = ReceivingResponses(cancellationTokenSource.Token);
 			}
 			catch (Exception exception)
 			{
@@ -65,10 +78,13 @@ namespace GrpcChatClient
 			return client;
 		}
 
-		private async Task ReceivingResponses()
+		private async Task ReceivingResponses(CancellationToken cancellationToken)
 		{
 			IAsyncEnumerable<ChatMessagesResponse> responses = call.ResponseStream.ReadAllAsync(cancellationTokenSource.Token);
-			await OutputResponses(responses);
+			await foreach (var response in responses)
+			{
+				incomingMessages.Add(response, cancellationToken);
+			}
 		}
 
 		public async Task Login(string name)
@@ -87,23 +103,17 @@ namespace GrpcChatClient
 			await AppendLineToChatBox($"You joined the chat.");
 		}
 
-		public async Task SendMessageOverTheWire(string message)
+		public async Task SendMessageOverTheWire(IEnumerable<ChatMessagesRequest> messages)
 		{
-			var request = new ChatMessagesRequest()
+			foreach (var message in messages)
 			{
-				ChatMessage = new ChatMessage()
-				{
-					Id = userId.ToString(),
-					Message = message
-				}
-			};
-
-			await call.RequestStream.WriteAsync(request);
+				await call.RequestStream.WriteAsync(message);
+			}
 		}
 
-		private async Task OutputResponses(IAsyncEnumerable<ChatMessagesResponse> responses)
+		private async Task OutputMessages(IEnumerable<ChatMessagesResponse> incoming)
 		{
-			await foreach (var response in responses)
+			foreach (var response in incoming)
 			{
 				switch (response.MessagesCase)
 				{
@@ -161,7 +171,7 @@ namespace GrpcChatClient
 		/// Event.. no Task as return value..
 		private async void SendMessageButton_Click(object sender, RoutedEventArgs e)
 		{
-			await SendMessage();
+			SendMessage();
 		}
 
 		/// <summary>
@@ -174,7 +184,7 @@ namespace GrpcChatClient
 		{
 			if (e.Key == Key.Enter || e.Key == Key.Return)
 			{
-				await SendMessage();
+				SendMessage();
 			}
 		}
 
@@ -190,12 +200,20 @@ namespace GrpcChatClient
 
 		private async Task Disconnect()
 		{
-			await AppendLineToChatBox($"Disconnecting...");
+			outgoingMessages.CompleteAdding();
+			await sendingTask;
 
 			if (call != null)
 			{
 				await call.RequestStream.CompleteAsync();
+			}
 
+			await receivingTask;
+			outgoingMessages.CompleteAdding();
+			await outputTask;
+
+			if(call != null)
+			{
 				// Dispose because i dispose everything. It should not cancel here if we did everything right
 				call.Dispose();
 				call = null;
@@ -209,7 +227,7 @@ namespace GrpcChatClient
 		/// <summary>
 		///     Send our message.
 		/// </summary>
-		private async Task SendMessage()
+		private void SendMessage()
 		{
 			// If we have tried to send a zero length string we just return
 			if (messageText.Text == string.Empty)
@@ -217,7 +235,16 @@ namespace GrpcChatClient
 				return;
 			}
 
-			await SendMessageOverTheWire(messageText.Text);
+			var request = new ChatMessagesRequest()
+			{
+				ChatMessage = new ChatMessage()
+				{
+					Id = userId.ToString(),
+					Message = messageText.Text
+				}
+			};
+
+			outgoingMessages.Add(request);
 
 			/*
 			var random = new Random();
