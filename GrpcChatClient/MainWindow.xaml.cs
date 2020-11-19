@@ -19,6 +19,7 @@ namespace GrpcChatClient
 	{
 		private readonly CancellationTokenSource cancellationTokenSource;
 		private Guid userId = Guid.NewGuid();
+		private string userName = $"Max{new Random().Next(1, 100)}";
 		private AsyncDuplexStreamingCall<ChatMessagesRequest, ChatMessagesResponse> call;
 		private BlockingCollection<ChatMessagesResponse> incomingMessages = new BlockingCollection<ChatMessagesResponse>();
 		private BlockingCollection<ChatMessagesRequest> outgoingMessages = new BlockingCollection<ChatMessagesRequest>();
@@ -53,7 +54,7 @@ namespace GrpcChatClient
 					.GetConsumingEnumerable();
 				outputTask = Task.Run(() => OutputMessages(incoming));
 
-				await Login($"Max{new Random().Next(1, 100)}");
+				await Login($"{userName}");
 
 				receivingTask = ReceivingResponses(cancellationTokenSource.Token);
 			}
@@ -244,7 +245,15 @@ namespace GrpcChatClient
 				}
 			};
 
-			outgoingMessages.Add(request);
+			outgoingMessages.Add(request, cancellationTokenSource.Token);
+
+			var responseToMe = new ChatMessagesResponse()
+			{
+				SendFromUserId = userId.ToString(),
+				SendFromUserName = userName,
+				ChatMessage = request.ChatMessage
+			};
+			incomingMessages.Add(responseToMe, cancellationTokenSource.Token);
 
 			/*
 			var random = new Random();
