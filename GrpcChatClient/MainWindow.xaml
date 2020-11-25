@@ -11,6 +11,7 @@
 		<TextBox Height="226" HorizontalAlignment="Left" Margin="646,22,0,0" Name="userList" VerticalAlignment="Top" Width="136" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
 		<Label Content="Message:" Height="28" HorizontalAlignment="Left" Margin="5,269,0,0" Name="label5" VerticalAlignment="Top" />
 		<TextBox Height="23" HorizontalAlignment="Left" Margin="64,272,0,0" Name="messageText" VerticalAlignment="Top" Width="457" KeyUp="MessageText_KeyUp"/>
-		<Button Content="Send" Height="23" HorizontalAlignment="Left" Margin="524,272,0,0" Name="sendMessageButton" VerticalAlignment="Top" Width="117" Click="SendMessageButton_Click"/>
+		<Button x:Name="sendMessageButton" Content="Send" Height="23" HorizontalAlignment="Left" Margin="524,272,0,0" VerticalAlignment="Top" Width="117" Click="SendMessageButton_Click"/>
+		<Button x:Name="connectAndLoginButton" Content="Login" HorizontalAlignment="Left" Height="23" Margin="664,272,0,0" VerticalAlignment="Top" Width="100" Click="connectAndLoginButton_Click"/>
 	</Grid>
 </Window>

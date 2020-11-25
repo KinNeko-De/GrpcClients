@@ -18,15 +18,14 @@ namespace GrpcChatClient
 	public partial class MainWindow : Window
 	{
 		private readonly CancellationTokenSource cancellationTokenSource;
-		private Guid userId = Guid.NewGuid();
-		private string userName = $"Max{new Random().Next(1, 100)}";
 		private AsyncDuplexStreamingCall<ChatMessagesRequest, ChatMessagesResponse> call;
-		private BlockingCollection<ChatMessagesResponse> incomingMessages = new BlockingCollection<ChatMessagesResponse>();
 		private BlockingCollection<ChatMessagesRequest> outgoingMessages = new BlockingCollection<ChatMessagesRequest>();
 
 		private Task sendingTask;
-		private Task outputTask;
 		private Task receivingTask;
+
+		private string userId;
+		private string userName;
 
 		public MainWindow()
 		{
@@ -40,36 +39,45 @@ namespace GrpcChatClient
 			InitializeComponent();
 		}
 
-		private async void Window_Loaded(object sender, RoutedEventArgs e)
+		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
+			
+		}
+
+		private async Task StartChatting(string userName, RoutedEventArgs e)
+		{
+			this.userName = userName;
+			this.userId = Guid.NewGuid().ToString();
 			try
 			{
 				call = await ConnectToServer();
-
-				var outgoing = outgoingMessages
-					.GetConsumingEnumerable();
-				sendingTask = Task.Run(() => SendMessageOverTheWire(outgoing));
-
-				var incoming = incomingMessages
-					.GetConsumingEnumerable();
-				outputTask = Task.Run(() => OutputMessages(incoming));
-
 				await Login($"{userName}");
 
-				receivingTask = ReceivingResponses(cancellationTokenSource.Token);
+				sendingTask = Task.Run(() => SendMessageOverTheWire());
+
+				receivingTask = ReceivingResponses();
 			}
 			catch (Exception exception)
 			{
-				await AppendLineToChatBox(exception.ToString());
+				await AppendLineToChatBox($"Connect to server failed: {exception}");
+				e.Handled = true;
 			}
 		}
 
 		public async Task<AsyncDuplexStreamingCall<ChatMessagesRequest, ChatMessagesResponse>> ConnectToServer()
 		{
-			await AppendLineToChatBox($"Trying to connect to server...");
-			var client = CreateClient();
-			call = client.SendMessages(cancellationToken: cancellationTokenSource.Token);
-			return call;
+			try
+			{
+				await AppendLineToChatBox($"Trying to connect to server...");
+				var client = CreateClient();
+				call = client.SendMessages(cancellationToken: cancellationTokenSource.Token);
+				return call;
+			}
+			catch (Exception exception)
+			{
+				await AppendLineToChatBox(exception.ToString());
+				throw;
+			}
 		}
 
 		public static Chat.ChatClient CreateClient()
@@ -79,12 +87,19 @@ namespace GrpcChatClient
 			return client;
 		}
 
-		private async Task ReceivingResponses(CancellationToken cancellationToken)
+		private async Task ReceivingResponses()
 		{
-			IAsyncEnumerable<ChatMessagesResponse> responses = call.ResponseStream.ReadAllAsync(cancellationTokenSource.Token);
-			await foreach (var response in responses)
+			try
 			{
-				incomingMessages.Add(response, cancellationToken);
+				IAsyncEnumerable<ChatMessagesResponse> responses = call.ResponseStream.ReadAllAsync(cancellationTokenSource.Token);
+				await foreach (var response in responses)
+				{
+					await OutputMessage(response);
+				}
+			}
+			catch (Exception exception)
+			{
+				await AppendLineToChatBox($"Exception occurred while receiving messages from server: {exception}");
 			}
 		}
 
@@ -104,32 +119,31 @@ namespace GrpcChatClient
 			await AppendLineToChatBox($"You joined the chat.");
 		}
 
-		public async Task SendMessageOverTheWire(IEnumerable<ChatMessagesRequest> messages)
+		public async Task SendMessageOverTheWire()
 		{
-			foreach (var message in messages)
+			var outgoing = outgoingMessages
+.GetConsumingEnumerable();		
+			foreach (var message in outgoing)
 			{
 				await call.RequestStream.WriteAsync(message);
 			}
 		}
 
-		private async Task OutputMessages(IEnumerable<ChatMessagesResponse> incoming)
+		private async Task OutputMessage(ChatMessagesResponse response)
 		{
-			foreach (var response in incoming)
+			switch (response.MessagesCase)
 			{
-				switch (response.MessagesCase)
-				{
-					case ChatMessagesResponse.MessagesOneofCase.None:
-						break;
-					case ChatMessagesResponse.MessagesOneofCase.ChatMessage:
-						await AppendLineToChatBox($"[{response.SendFromUserName}]: {response.ChatMessage.Message}");
-						break;
-					case ChatMessagesResponse.MessagesOneofCase.UserLogin:
-						await AppendLineToChatBox($"[{response.UserLogin.Name}] connected.");
-						break;
-					case ChatMessagesResponse.MessagesOneofCase.UserLogout:
-						await AppendLineToChatBox($"[{response.UserLogout.Name}] disconnected.");
-						break;
-				}
+				case ChatMessagesResponse.MessagesOneofCase.None:
+					break;
+				case ChatMessagesResponse.MessagesOneofCase.ChatMessage:
+					await AppendLineToChatBox($"[{response.SendFromUserName}]: {response.ChatMessage.Message}");
+					break;
+				case ChatMessagesResponse.MessagesOneofCase.UserLogin:
+					await AppendLineToChatBox($"[{response.UserLogin.Name}] connected.");
+					break;
+				case ChatMessagesResponse.MessagesOneofCase.UserLogout:
+					await AppendLineToChatBox($"[{response.UserLogout.Name}] disconnected.");
+					break;
 			}
 		}
 
@@ -139,13 +153,13 @@ namespace GrpcChatClient
 		/// <param name="message"></param>
 		public async Task AppendLineToChatBox(string message)
 		{
-			//To ensure we can successfully append to the text box from any thread
-			//we need to wrap the append within an invoke action.
+			// To ensure we can successfully append to the text box from any thread
+			// we need to wrap the append within an invoke action.
 			await chatBox.Dispatcher.BeginInvoke(new Action<string>((messageToAdd) =>
 			{
 				chatBox.AppendText(messageToAdd + Environment.NewLine);
 				chatBox.ScrollToEnd();
-			}), new object[] {message});
+			}), message);
 		}
 
 		/// <summary>
@@ -172,7 +186,12 @@ namespace GrpcChatClient
 		/// Event.. no Task as return value..
 		private async void SendMessageButton_Click(object sender, RoutedEventArgs e)
 		{
-			SendMessage();
+			if(userId == null)
+			{
+				await NewUserLogin(e);
+			}
+
+			await SendMessage();
 		}
 
 		/// <summary>
@@ -185,7 +204,7 @@ namespace GrpcChatClient
 		{
 			if (e.Key == Key.Enter || e.Key == Key.Return)
 			{
-				SendMessage();
+				await SendMessage();
 			}
 		}
 
@@ -209,9 +228,11 @@ namespace GrpcChatClient
 				await call.RequestStream.CompleteAsync();
 			}
 
-			await receivingTask;
+			if(receivingTask != null)
+			{
+				await receivingTask;
+			}
 			outgoingMessages.CompleteAdding();
-			await outputTask;
 
 			if(call != null)
 			{
@@ -223,13 +244,17 @@ namespace GrpcChatClient
 			// Just to be sure :)
 			cancellationTokenSource.Cancel();
 			cancellationTokenSource.Dispose();
+			userId = null;
+			userName = null;
 		}
 
 		/// <summary>
 		///     Send our message.
 		/// </summary>
-		private void SendMessage()
+		private async Task SendMessage()
 		{
+			
+
 			// If we have tried to send a zero length string we just return
 			if (messageText.Text == string.Empty)
 			{
@@ -240,7 +265,7 @@ namespace GrpcChatClient
 			{
 				ChatMessage = new ChatMessage()
 				{
-					Id = userId.ToString(),
+					Id = userId,
 					Message = messageText.Text
 				}
 			};
@@ -249,11 +274,11 @@ namespace GrpcChatClient
 
 			var responseToMe = new ChatMessagesResponse()
 			{
-				SendFromUserId = userId.ToString(),
+				SendFromUserId = userId,
 				SendFromUserName = userName,
 				ChatMessage = request.ChatMessage
 			};
-			incomingMessages.Add(responseToMe, cancellationTokenSource.Token);
+			await OutputMessage(responseToMe);
 
 			/*
 			var random = new Random();
@@ -266,6 +291,40 @@ namespace GrpcChatClient
 			*/
 
 			messageText.Clear();
+		}
+
+		private async void connectAndLoginButton_Click(object sender, RoutedEventArgs e)
+		{
+			await NewUserLogin(e);
+		}
+
+		private async Task NewUserLogin(RoutedEventArgs e)
+		{
+			if(userId != null)
+			{
+				MessageBox.Show("Already logged in", "Error", MessageBoxButton.OK, MessageBoxImage.Information);
+				return;
+			}
+
+			LoginDialog loginWindow = new LoginDialog();
+			bool? dialogResult = loginWindow.ShowDialog();
+		
+			if (dialogResult.HasValue)
+			{
+				if (dialogResult.Value)
+				{
+					var loginName = loginWindow.LoginName;
+					await StartChatting(loginName, e);
+				}
+				else
+				{
+					await AppendLineToChatBox("Login aborted.");
+				}
+			}
+			else
+			{
+				await AppendLineToChatBox("Something went wrong (example i forgot the window close event)");
+			}
 		}
 	}
 }
