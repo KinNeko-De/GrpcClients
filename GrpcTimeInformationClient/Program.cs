@@ -16,8 +16,7 @@ namespace GrpcTimeInformationClient
 		static async Task Main(string[] args)
 		{
 			AppContext.SetSwitch(
-				"System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
-				true);
+				"System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 			IConfigurationRoot configuration = ReadConfiguration();
 			var serverUrl = GetServerUrl(configuration);
@@ -25,10 +24,8 @@ namespace GrpcTimeInformationClient
 			Console.Write("What is your name?: ");
 			var userName = Console.ReadLine();
 
-			var httpClient = new HttpClient();
-			httpClient.BaseAddress = new Uri(serverUrl);
-			TimeInformation.TimeInformationClient client = GrpcClient.Create<TimeInformation.TimeInformationClient>(httpClient);
-
+			var channel = GrpcChannel.ForAddress(new Uri(serverUrl), new GrpcChannelOptions() { Credentials = ChannelCredentials.Insecure});
+			TimeInformation.TimeInformationClient client = new TimeInformation.TimeInformationClient(channel);
 			// await TimePingWithCancellationToken(userName, client);
 
 			await TimePingWithGoodBye(userName, client);
