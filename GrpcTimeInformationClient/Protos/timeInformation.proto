@@ -7,7 +7,7 @@ package TimeInformation;
 import "google/protobuf/timestamp.proto";
 
 // The greeting service definition.
-service TimeInformation {
+service TimeInformationService {
   // Sends a greeting
   rpc TimePing (TimePingRequest) returns (stream TimePingReply) {}
   rpc TimePingWithGoodBye (stream TimePingRequest) returns (stream TimePingReply) {}

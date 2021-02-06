@@ -25,14 +25,14 @@ namespace GrpcTimeInformationClient
 			var userName = Console.ReadLine();
 
 			var channel = GrpcChannel.ForAddress(new Uri(serverUrl), new GrpcChannelOptions() { Credentials = ChannelCredentials.Insecure});
-			TimeInformation.TimeInformationClient client = new TimeInformation.TimeInformationClient(channel);
-			// await TimePingWithCancellationToken(userName, client);
+			TimeInformationService.TimeInformationServiceClient client = new TimeInformationService.TimeInformationServiceClient(channel);
+			await TimePingWithCancellationToken(userName, client);
 
-			await TimePingWithGoodBye(userName, client);
+			// await TimePingWithGoodBye(userName, client);
 
 		}
 
-		private static async Task TimePingWithGoodBye(string userName, TimeInformation.TimeInformationClient client)
+		private static async Task TimePingWithGoodBye(string userName, TimeInformationService.TimeInformationServiceClient client)
 		{
 			Console.Write("How long should i wait? (seconds): ");
 			var waitTime = double.Parse(Console.ReadLine());
@@ -60,7 +60,7 @@ namespace GrpcTimeInformationClient
 			};
 		}
 
-		private static async Task TimePingWithCancellationToken(string userName, TimeInformation.TimeInformationClient client)
+		private static async Task TimePingWithCancellationToken(string userName, TimeInformationService.TimeInformationServiceClient client)
 		{
 			CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 			CancellationToken token = cancellationTokenSource.Token;
