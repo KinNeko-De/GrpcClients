@@ -80,10 +80,10 @@ namespace GrpcChatClient
 			}
 		}
 
-		public static Chat.ChatClient CreateClient()
+		public static ChatService.ChatServiceClient CreateClient()
 		{
 			var channel = GrpcChannel.ForAddress("https://localhost:5001");
-			var client = new Chat.ChatClient(channel);
+			var client = new ChatService.ChatServiceClient(channel);
 			return client;
 		}
 

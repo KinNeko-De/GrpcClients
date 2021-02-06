@@ -4,7 +4,7 @@ option csharp_namespace = "GrpcServer";
 
 package Chat;
 
-service Chat {
+service ChatService {
   rpc SendMessages (stream ChatMessagesRequest) returns (stream ChatMessagesResponse) {}
   rpc DirectMessage (DirectMessageRequest) returns (DirectMessageResponse) {}
 }
