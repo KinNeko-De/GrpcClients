@@ -1,0 +1,15 @@
+﻿<Window x:Class="GrpcChatClient.LoginDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GrpcChatClient"
+        mc:Ignorable="d"
+        Title="LoginDialog" Height="158" Width="166">
+	<Grid>
+		<Button Content="Login" HorizontalAlignment="Left" Margin="27,83,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+		<Button Content="Cancel" HorizontalAlignment="Left" Margin="108,83,0,0" VerticalAlignment="Top" Click="Button_Click_1"/>
+		<TextBox x:Name="Name" HorizontalAlignment="Left" Margin="27,37,0,0" Text=""  TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+
+	</Grid>
+</Window>
