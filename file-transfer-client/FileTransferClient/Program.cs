@@ -1,10 +1,10 @@
-﻿using FileTransfer;
-using Grpc.Core;
+﻿using Grpc.Core;
 using Grpc.Net.Client;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpcservices;
 
 namespace FileTransferClient
 {
@@ -15,24 +15,25 @@ namespace FileTransferClient
 			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 			var channel = GrpcChannel.ForAddress("https://localhost:5001");
-			var grpcClient = new FileTransfer.Files.FilesClient(channel);
+			var grpcClient = new FileService.FileServiceClient(channel);
 
 			var fileName = "medium.txt";
 			var sourceFile = Path.Combine(Path.GetTempPath(), "FileTransfer", "Files", fileName);
-
-			CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-			using (var call = grpcClient.StartUpload())
+			if (!File.Exists(sourceFile))
 			{
-				await SendFileMetadata(fileName, call);
-
-				await SendFilePayload(sourceFile, call, cancellationTokenSource.Token);
-
-				await call.RequestStream.CompleteAsync();
-
-				await call;
-				
+				throw new FileNotFoundException("File to upload not found.", sourceFile);
 			}
 
+			CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+			using var call = grpcClient.StartUpload();
+
+			await SendFileMetadata(fileName, call);
+
+			await SendFilePayload(sourceFile, call, cancellationTokenSource.Token);
+
+			await call.RequestStream.CompleteAsync();
+
+			await call;
 		}
 
 		private static async Task SendFileMetadata(string fileName, AsyncClientStreamingCall<StartUploadRequest, StartUploadResponse> call)
@@ -49,25 +50,24 @@ namespace FileTransferClient
 
 		private static async Task SendFilePayload(string sourceFile, AsyncClientStreamingCall<StartUploadRequest, StartUploadResponse> call, CancellationToken cancellationToken)
 		{
-			var chunksize = 0x1F400;
-			byte[] chunk = new byte[chunksize];
+			var chunkSize = 0x1F400;
+			byte[] chunk = new byte[chunkSize];
 			Memory<byte> memory = new Memory<byte>(chunk);
 
-			await using (FileStream fileToUpload = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, chunksize))
-			{
-				int bytesRead = 0;
-				while((bytesRead = await fileToUpload.ReadAsync(memory, cancellationToken)) > 0)
-				{
-					var filePayloadRequest = new StartUploadRequest()
-					{
-						FilePayload = new FilePayload
-						{
-							Chunk = Google.Protobuf.ByteString.CopyFrom(memory.Slice(0, bytesRead).Span)
-						}
-					};
+			await using FileStream fileToUpload = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, chunkSize);
 
-					await call.RequestStream.WriteAsync(filePayloadRequest);
-				}
+			int bytesRead = 0;
+			while((bytesRead = await fileToUpload.ReadAsync(memory, cancellationToken)) > 0)
+			{
+				var filePayloadRequest = new StartUploadRequest()
+				{
+					FilePayload = new FilePayload
+					{
+						Chunk = Google.Protobuf.ByteString.CopyFrom(memory.Slice(0, bytesRead).Span)
+					}
+				};
+
+				await call.RequestStream.WriteAsync(filePayloadRequest);
 			}
 		}
 	}

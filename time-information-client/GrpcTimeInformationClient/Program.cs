@@ -5,9 +5,9 @@ using Grpc.Net.Client;
 using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using System.IO;
-using GrpcServer;
 using System.Threading;
 using Grpc.Core;
+using Grpcservices;
 
 namespace GrpcTimeInformationClient
 {
@@ -73,7 +73,7 @@ namespace GrpcTimeInformationClient
 				{
 					while (await response.ResponseStream.MoveNext(token))
 					{
-						TimePingReply timePingReply = response.ResponseStream.Current;
+						TimePingResponse timePingReply = response.ResponseStream.Current;
 						Console.WriteLine($"{timePingReply.TimeNow.ToDateTimeOffset().ToString()} : {timePingReply.Message}");
 					}
 				}
@@ -87,7 +87,7 @@ namespace GrpcTimeInformationClient
 			}
 		}
 
-		private static async Task PrintReponse(IAsyncStreamReader<TimePingReply> responseStream)
+		private static async Task PrintReponse(IAsyncStreamReader<TimePingResponse> responseStream)
 		{
 			while(await responseStream.MoveNext(CancellationToken.None))
 			{

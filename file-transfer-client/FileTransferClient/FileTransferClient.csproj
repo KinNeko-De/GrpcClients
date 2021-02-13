@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,20 +6,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Proto\filetransfer.proto" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.11.4" />
-    <PackageReference Include="Grpc.Net.Client" Version="2.27.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.27.0">
+    <PackageReference Include="Google.Protobuf" Version="3.14.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.35.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.35.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Proto\filetransfer.proto" GrpcServices="Client" />
+    <Protobuf Include="..\..\protos\filetransfer_service.proto" GrpcServices="Client">
+      <Link>protos/filetransfer_service.proto</Link>
+    </Protobuf>
   </ItemGroup>
 
 </Project>

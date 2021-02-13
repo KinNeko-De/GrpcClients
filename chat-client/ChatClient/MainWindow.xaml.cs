@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using Grpc.Core;
 using Grpc.Net.Client;
-using GrpcServer;
+using Grpcservices;
 
 namespace GrpcChatClient
 {
@@ -34,7 +34,8 @@ namespace GrpcChatClient
 
 			cancellationTokenSource = new CancellationTokenSource();
 
-			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+			// Only need when you have only a http port
+			// AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 			InitializeComponent();
 		}

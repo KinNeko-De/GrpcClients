@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="IBM860"?>
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Protos\timeInformation.proto" />
+    <Protobuf Include="..\..\protos\timeinformation_service.proto" Link="protos\timeinformation_service.proto" GrpcServices="Client" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,10 +20,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="Protos\timeInformation.proto" GrpcServices="Client" />
   </ItemGroup>
 
   <ItemGroup>
