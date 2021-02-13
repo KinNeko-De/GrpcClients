@@ -1,0 +1,20 @@
+﻿syntax = "proto3";
+
+package grpcservices;
+
+service ZipExtractorService {
+  rpc Extract (stream ExtractFileRequest) returns (stream ExtractFileResponse) {}
+}
+
+message ExtractFileRequest {
+	string id = 1;
+	string file_path_and_name = 2;
+	string target_path = 3;
+}
+
+message ExtractFileResponse {
+	string id = 1;
+	int32 items = 2;
+	int32 items_installed = 3;
+	bool finished = 4;
+}

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package grpcservices;
+
+import "google/protobuf/timestamp.proto";
+
+service TimeInformationService {
+  rpc TimePing (TimePingRequest) returns (stream TimePingResponse) {}
+  rpc TimePingWithGoodBye (stream TimePingRequest) returns (stream TimePingResponse) {}
+}
+
+message TimePingRequest {
+	string client_name = 1;
+	// signals that you want to quit the call
+	bool good_bye = 2;
+}
+
+message TimePingResponse {
+	string message = 1;
+	google.protobuf.Timestamp time_now = 2;
+}

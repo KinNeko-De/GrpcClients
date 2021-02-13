@@ -1,0 +1,17 @@
+﻿syntax = "proto3";
+
+package grpcservices;
+
+// Service that throws always exceptions
+service ErrorService {
+  // Doesn not handle exceptions correctly and throws grpc status code UNKNOWN all time
+  rpc IDoNotHandleErrorCorrectly(ErrorRequest) returns (ErrorResponse) {}
+  // Returns a error that is enriched with every possible methods provided by the grpc standard
+  rpc GiveMeADetailedError (ErrorRequest) returns (ErrorResponse) {}
+}
+
+message ErrorRequest {
+}
+
+message ErrorResponse {
+}

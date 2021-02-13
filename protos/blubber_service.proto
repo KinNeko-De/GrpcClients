@@ -1,0 +1,19 @@
+﻿syntax = "proto3";
+
+package grpcservices;
+
+// The greeting service definition.
+service BlubberService {
+  // Sends a greeting
+  rpc GiveMeABlub (GiveMeABlubRequest) returns (GiveMeABlubReply) {}
+}
+
+// The request message containing the user's name.
+message GiveMeABlubRequest {
+	string nameOfClient = 1;
+}
+
+// The response message containing the greetings.
+message GiveMeABlubReply {
+	string message = 1;
+}
