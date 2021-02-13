@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcServer";
+
+package TimeInformation;
+
+import "google/protobuf/timestamp.proto";
+
+// The greeting service definition.
+service TimeInformationService {
+  // Sends a greeting
+  rpc TimePing (TimePingRequest) returns (stream TimePingReply) {}
+  rpc TimePingWithGoodBye (stream TimePingRequest) returns (stream TimePingReply) {}
+}
+
+// The request message containing the user's name.
+message TimePingRequest {
+	string clientName = 1;
+	bool goodBye = 2;
+}
+
+// The response message containing the greetings.
+message TimePingReply {
+	string message = 1;
+	google.protobuf.Timestamp timeNow = 2;
+}
