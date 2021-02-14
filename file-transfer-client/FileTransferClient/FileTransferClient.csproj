@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\..\protos\filetransfer_service.proto" GrpcServices="Client">
-      <Link>protos/filetransfer_service.proto</Link>
+    <Protobuf Include="..\..\protos\files\filetransfer_service.proto" GrpcServices="Client">
+      <Link>protos/files/filetransfer_service.proto</Link>
     </Protobuf>
   </ItemGroup>
 

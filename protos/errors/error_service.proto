@@ -1,0 +1,37 @@
+﻿syntax = "proto3";
+
+package errors;
+
+// Service that throws always exceptions
+service ErrorService {
+  // Throws a non exception that is not handled correctly. In result throws grpc status code UNKNOWN all time.
+  rpc IDoNotHandleErrorCorrectly(ErrorRequest) returns (ErrorResponse) {}
+  // Throws a rpc exception that is not handled.rpc In result the status code is correct but no exception is logged
+  rpc IDoNotLogRpcExceptionCorrectly(ErrorRequest) returns (ErrorResponse) {}
+  // Returns a error that is enriched with every possible methods provided by the grpc standard
+  // detailed information are in the trailer under key 'givemeadetailederrorerror' and of type 'GiveMeADetailedErrorError'
+  rpc GiveMeADetailedError (GiveMeADetailedErrorRequest) returns (GiveMeADetailedErrorResponse) {}
+}
+
+message ErrorRequest {
+}
+
+message ErrorResponse {
+}
+
+message GiveMeADetailedErrorRequest {
+}
+
+message GiveMeADetailedErrorResponse {
+}
+
+message GiveMeADetailedErrorError {
+	oneof error {
+		PermissionDeniedError permission_denied = 1;
+	}
+}
+
+message PermissionDeniedError {
+	string reason = 1;
+	string user = 2;
+}

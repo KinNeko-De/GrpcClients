@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Grpc.Net.Client;
-using System.Diagnostics;
-using Microsoft.Extensions.Configuration;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Grpc.Core;
-using Grpcservices;
+using Grpc.Net.Client;
+using Microsoft.Extensions.Configuration;
+using Streaming.Server;
 
-namespace GrpcTimeInformationClient
+namespace TimeInformationClient
 {
 	class Program
 	{

@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Grpc.Core;
 using Grpc.Net.Client;
-using Grpcservices;
+using Streaming.Bidirectional;
 
-namespace GrpcChatClient
+namespace ChatClient
 {
 	/// <summary>
 	///     Interaction logic for MainWindow.xaml
@@ -19,7 +18,7 @@ namespace GrpcChatClient
 	{
 		private readonly CancellationTokenSource cancellationTokenSource;
 		private AsyncDuplexStreamingCall<ChatMessagesRequest, ChatMessagesResponse> call;
-		private BlockingCollection<ChatMessagesRequest> outgoingMessages = new BlockingCollection<ChatMessagesRequest>();
+		private readonly BlockingCollection<ChatMessagesRequest> outgoingMessages = new BlockingCollection<ChatMessagesRequest>();
 
 		private Task sendingTask;
 		private Task receivingTask;
@@ -42,7 +41,6 @@ namespace GrpcChatClient
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
-			
 		}
 
 		private async Task StartChatting(string userName, RoutedEventArgs e)
@@ -123,7 +121,7 @@ namespace GrpcChatClient
 		public async Task SendMessageOverTheWire()
 		{
 			var outgoing = outgoingMessages
-.GetConsumingEnumerable();		
+				.GetConsumingEnumerable();
 			foreach (var message in outgoing)
 			{
 				await call.RequestStream.WriteAsync(message);
@@ -187,7 +185,7 @@ namespace GrpcChatClient
 		/// Event.. no Task as return value..
 		private async void SendMessageButton_Click(object sender, RoutedEventArgs e)
 		{
-			if(userId == null)
+			if (userId == null)
 			{
 				await NewUserLogin(e);
 			}
@@ -229,13 +227,14 @@ namespace GrpcChatClient
 				await call.RequestStream.CompleteAsync();
 			}
 
-			if(receivingTask != null)
+			if (receivingTask != null)
 			{
 				await receivingTask;
 			}
+
 			outgoingMessages.CompleteAdding();
 
-			if(call != null)
+			if (call != null)
 			{
 				// Dispose because i dispose everything. It should not cancel here if we did everything right
 				call.Dispose();
@@ -254,8 +253,6 @@ namespace GrpcChatClient
 		/// </summary>
 		private async Task SendMessage()
 		{
-			
-
 			// If we have tried to send a zero length string we just return
 			if (messageText.Text == string.Empty)
 			{
@@ -301,7 +298,7 @@ namespace GrpcChatClient
 
 		private async Task NewUserLogin(RoutedEventArgs e)
 		{
-			if(userId != null)
+			if (userId != null)
 			{
 				MessageBox.Show("Already logged in", "Error", MessageBoxButton.OK, MessageBoxImage.Information);
 				return;
@@ -309,7 +306,7 @@ namespace GrpcChatClient
 
 			LoginDialog loginWindow = new LoginDialog();
 			bool? dialogResult = loginWindow.ShowDialog();
-		
+
 			if (dialogResult.HasValue)
 			{
 				if (dialogResult.Value)

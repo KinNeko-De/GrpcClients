@@ -1,6 +1,6 @@
 ﻿syntax = "proto3";
 
-package grpcservices;
+package streaming.unary;
 
 // The greeting service definition.
 service BlubberService {

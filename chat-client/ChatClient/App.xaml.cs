@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace GrpcChatClient
+namespace ChatClient
 {
 	/// <summary>
 	/// Interaction logic for App.xaml

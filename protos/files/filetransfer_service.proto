@@ -1,8 +1,8 @@
 ﻿syntax = "proto3";
 
-package grpcservices;
+package files;
 
-service FileService {
+service TransferService {
   rpc StartUpload(stream StartUploadRequest) returns (StartUploadResponse);
   rpc StartDownload(StartDownloadRequest) returns (stream StartDownloadResponse);
   rpc ResumeUpload(stream ResumeUploadRequest) returns (ResumeUploadResponse);

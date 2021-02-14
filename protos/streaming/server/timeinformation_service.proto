@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package grpcservices;
+package streaming.server;
 
 import "google/protobuf/timestamp.proto";
 

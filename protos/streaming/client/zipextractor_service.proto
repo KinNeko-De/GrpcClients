@@ -1,6 +1,6 @@
 ﻿syntax = "proto3";
 
-package grpcservices;
+package streaming.client;
 
 service ZipExtractorService {
   rpc Extract (stream ExtractFileRequest) returns (stream ExtractFileResponse) {}

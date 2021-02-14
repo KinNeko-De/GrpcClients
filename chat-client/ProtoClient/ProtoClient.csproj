@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\..\protos\chat_service.proto">
+    <Protobuf Include="..\..\protos\streaming\bidirectional\chat_service.proto" GrpcServices="Client">
       <Link>chat_service.proto</Link>
     </Protobuf>
   </ItemGroup>

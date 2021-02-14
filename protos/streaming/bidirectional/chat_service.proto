@@ -1,6 +1,6 @@
 ﻿syntax = "proto3";
 
-package grpcservices;
+package streaming.bidirectional;
 
 service ChatService {
   rpc SendMessages (stream ChatMessagesRequest) returns (stream ChatMessagesResponse) {}

@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Grpcservices;
+using Files;
 
 namespace FileTransferClient
 {
@@ -15,7 +15,7 @@ namespace FileTransferClient
 			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 			var channel = GrpcChannel.ForAddress("https://localhost:5001");
-			var grpcClient = new FileService.FileServiceClient(channel);
+			var grpcClient = new TransferService.TransferServiceClient(channel);
 
 			var fileName = "medium.txt";
 			var sourceFile = Path.Combine(Path.GetTempPath(), "FileTransfer", "Files", fileName);
