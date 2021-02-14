@@ -40,14 +40,14 @@ namespace TimeInformationClient
 
 			CancelApplication(cancellationTokenSource);
 
-			using (var call = client.TimePingWithGoodBye())
+			using (var call = client.TimePingWithGoodBye(cancellationToken: token))
 			{
 				var outputTask = Task.Run(() => PrintReponse(call.ResponseStream));
 
 				while (!token.IsCancellationRequested)
 				{
 					await call.RequestStream.WriteAsync(new TimePingRequest() { ClientName = userName });
-					await Task.Delay(TimeSpan.FromSeconds(waitTime));
+					await Task.Delay(TimeSpan.FromSeconds(waitTime), token);
 				}
 
 				await call.RequestStream.WriteAsync(new TimePingRequest() { ClientName = userName, GoodBye = true });

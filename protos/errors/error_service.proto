@@ -8,8 +8,10 @@ service ErrorService {
   rpc IDoNotHandleErrorCorrectly(ErrorRequest) returns (ErrorResponse) {}
   // Throws a rpc exception that is not handled.rpc In result the status code is correct but no exception is logged
   rpc IDoNotLogRpcExceptionCorrectly(ErrorRequest) returns (ErrorResponse) {}
+  // Returns a unhandled exceptin that is wrapped to a rpc status code internal
+  rpc GiveMeADetailedUnhandledException (ErrorRequest) returns (ErrorResponse) {}
   // Returns a error that is enriched with every possible methods provided by the grpc standard
-  // detailed information are in the trailer under key 'givemeadetailederrorerror' and of type 'GiveMeADetailedErrorError'
+  // detailed information are in the trailer under key 'givemeadetailederrorerror-bin' and of type 'GiveMeADetailedErrorError'
   rpc GiveMeADetailedError (GiveMeADetailedErrorRequest) returns (GiveMeADetailedErrorResponse) {}
 }
 
